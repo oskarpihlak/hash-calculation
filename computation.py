@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import multiprocessing
 import pprint
@@ -39,7 +40,7 @@ def to_hms(seconds):
 
 
 def print_time(computation):
-    print(computation)
+    print(f'Process {computation[0]} starting: {computation}')
     global largest_zero_count
     global best_hash
     global best_nonce
@@ -67,29 +68,34 @@ def print_time(computation):
                 )
                 conn = sqlite3.connect('hash_data.db')
                 c = conn.cursor()
-                update_string = '''UPDATE hash_data SET largest_zero_count={largest_zero_count}, best_hash={best_hash}, start={start}, ending={ending} WHERE  id={id};'''.format(
+                update_string = '''UPDATE hash_data SET largest_zero_count={largest_zero_count}, best_hash='{best_hash}', start='{start}', ending='{ending}', best_nonce='{best_nonce}', total_proccessing_time={total_proccessing_time} WHERE id={id};'''.format(
                     largest_zero_count=largest_zero_count,
                     best_hash=str(best_hash),
                     best_nonce=str(best_nonce),
-                    start=str(start),
+                    start=str(i),
                     ending=str(end),
-                    id=id)
+                    id=id,
+                    total_proccessing_time=float(computation[6]) + (time.time() - now))
+                print(update_string)
                 with conn:
                     c.execute(update_string)
 
                 break
-            if m.end() > largest_zero_count:
-                largest_zero_count = m.end()
-                best_hash = main_hash
-                best_nonce = nonce
-                countdown = to_hms(int(time.time() - now))
-                hash_time = f"{bcolors.OKGREEN}{countdown.hours} hour(s) {countdown.minutes} minute(s) {countdown.seconds} second(s){bcolors.ENDC}"
-                status_text = f'\n{hash_time} - Process {bcolors.OKGREEN}{id}{bcolors.ENDC}' \
-                    f'\nNumber of 0s: {bcolors.FAIL}{largest_zero_count}{bcolors.ENDC}' \
-                    f'\nHash:         {bcolors.OKBLUE}{best_hash}{bcolors.ENDC}' \
-                    f'\nNonce:        {bcolors.OKBLUE}{best_nonce}{bcolors.ENDC}' \
-                    f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}'
-                print(status_text)
+            if m.end() >= largest_zero_count:
+                if int(main_hash, 16) < int(best_hash, 16):
+                    if m.end() == largest_zero_count:
+                        print('found a smaller one!')
+                    largest_zero_count = m.end()
+                    best_hash = main_hash
+                    best_nonce = nonce
+                    countdown = to_hms(int(float(computation[6]) + float(time.time() - now)))
+                    hash_time = f"{bcolors.OKGREEN}{countdown.hours} hour(s) {countdown.minutes} minute(s) {countdown.seconds} second(s){bcolors.ENDC}"
+                    status_text = f'\n{hash_time} - Process {bcolors.OKGREEN}{id}{bcolors.ENDC}' \
+                        f'\nNumber of 0s: {bcolors.FAIL}{largest_zero_count}{bcolors.ENDC}' \
+                        f'\nHash:         {bcolors.OKBLUE}{best_hash}{bcolors.ENDC}' \
+                        f'\nNonce:        {bcolors.OKBLUE}{best_nonce}{bcolors.ENDC}' \
+                        f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}'
+                    print(status_text)
 
 
 if __name__ == "__main__":
@@ -102,15 +108,16 @@ if __name__ == "__main__":
     best_nonce varchar ,
     best_hash varchar,
     start varchar(255) ,
-    ending varchar(255)
+    ending varchar(255),
+    total_proccessing_time varchar
     )''')
     with conn:
         c.execute("SELECT * FROM hash_data")
         if len(c.fetchall()) < 8:
             def hash_insert(id, largest_zero_count, best_nounce, best_hash, start, ending):
-                query = '''INSERT INTO hash_data VALUES ({id},{largest_zero_count},'{best_nounce}','{best_hash}','{start}','{ending}')''' \
+                query = '''INSERT INTO hash_data VALUES ({id},{largest_zero_count},'{best_nounce}','{best_hash}','{start}','{ending}','{total_proccessing_time}')''' \
                     .format(id=id, largest_zero_count=largest_zero_count, best_nounce=best_nounce, best_hash=best_hash,
-                            start=start, ending=ending)
+                            start=start, ending=ending, total_proccessing_time='0')
                 print(query)
                 c.execute(query)
 
