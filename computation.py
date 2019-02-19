@@ -60,30 +60,6 @@ def print_time(computation):
 
             m = prog.match(main_hash)
 
-            if is_pressed('q'):
-                print(
-                    f'Proccess {bcolors.FAIL}{id}{bcolors.ENDC}: {bcolors.OKGREEN}finished - {largest_zero_count} zeroes{bcolors.ENDC}\n'
-                    f'iteration:  {bcolors.OKGREEN}{i}{bcolors.ENDC}\n'
-                    f'currentHash:{bcolors.OKGREEN}{"{:032x}".format(i)}{bcolors.ENDC}\n'
-                    f'best hash   {bcolors.OKGREEN}{largest_zero_count} zeroes: {best_hash}{bcolors.ENDC}\n'
-                    f'best nonce  {bcolors.OKGREEN}{largest_zero_count}{best_nonce}{bcolors.ENDC}\n'
-                    f'end:        {bcolors.OKGREEN}{end}{bcolors.ENDC}\n'
-                    f'end hash    {bcolors.OKGREEN}{"{:032x}".format(end)}{bcolors.ENDC}\n\n\n')
-                conn = sqlite3.connect('hash_data.db')
-                c = conn.cursor()
-                update_string = '''UPDATE hash_data SET largest_zero_count={largest_zero_count}, best_hash='{best_hash}', start='{start}', ending='{ending}', best_nonce='{best_nonce}', total_proccessing_time={total_proccessing_time} WHERE id={id};'''.format(
-                    largest_zero_count=largest_zero_count,
-                    best_hash=str(best_hash),
-                    best_nonce=str(best_nonce),
-                    start=str(i),
-                    ending=str(end),
-                    id=id,
-                    total_proccessing_time=float(computation[6]) + (time.time() - now))
-                print(update_string)
-                with conn:
-                    c.execute(update_string)
-                break
-
             if m.end() >= largest_zero_count:
                 if int(main_hash, 16) < int(best_hash, 16):
                     if m.end() == largest_zero_count:
@@ -100,6 +76,30 @@ def print_time(computation):
                         f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}' \
                         f'\nHash rate     {bcolors.OKBLUE}{(i - (0 if id == 1 else ((((16 ** 32) // 8) * (id - 1)) - 1))) / int(float(computation[6]) + float(time.time() - now))}{bcolors.ENDC}'
                     print(status_text)
+
+        if is_pressed('q'):
+            print(
+                f'Proccess {bcolors.FAIL}{id}{bcolors.ENDC}: {bcolors.OKGREEN}finished - {largest_zero_count} zeroes{bcolors.ENDC}\n'
+                f'iteration:  {bcolors.OKGREEN}{i}{bcolors.ENDC}\n'
+                f'currentHash:{bcolors.OKGREEN}{"{:032x}".format(i)}{bcolors.ENDC}\n'
+                f'best hash   {bcolors.OKGREEN}{largest_zero_count} zeroes: {best_hash}{bcolors.ENDC}\n'
+                f'best nonce  {bcolors.OKGREEN}{largest_zero_count}{best_nonce}{bcolors.ENDC}\n'
+                f'end:        {bcolors.OKGREEN}{end}{bcolors.ENDC}\n'
+                f'end hash    {bcolors.OKGREEN}{"{:032x}".format(end)}{bcolors.ENDC}\n\n\n')
+            conn = sqlite3.connect('hash_data.db')
+            c = conn.cursor()
+            update_string = '''UPDATE hash_data SET largest_zero_count={largest_zero_count}, best_hash='{best_hash}', start='{start}', ending='{ending}', best_nonce='{best_nonce}', total_proccessing_time={total_proccessing_time} WHERE id={id};'''.format(
+                largest_zero_count=largest_zero_count,
+                best_hash=str(best_hash),
+                best_nonce=str(best_nonce),
+                start=str(i),
+                ending=str(end),
+                id=id,
+                total_proccessing_time=float(computation[6]) + (time.time() - now))
+            print(update_string)
+            with conn:
+                c.execute(update_string)
+            break
 
 
 if __name__ == "__main__":
