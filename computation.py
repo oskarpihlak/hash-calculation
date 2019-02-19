@@ -52,10 +52,14 @@ def print_time(computation):
     start, end = int(computation[4]), int(computation[5])
 
     for i in range(start, end):
+
         nonce = "{:032x}".format(i)
         main_hash = hashlib.sha256(('%s%s%s' % (previous, current, nonce)).encode('utf-8')).hexdigest()
-        m = prog.match(main_hash)
-        if m:
+
+        if prog.match(main_hash):
+
+            m = prog.match(main_hash)
+
             if is_pressed('q'):
                 print(
                     f'Proccess {bcolors.FAIL}{id}{bcolors.ENDC}: {bcolors.OKGREEN}finished - {largest_zero_count} zeroes{bcolors.ENDC}\n'
@@ -64,8 +68,7 @@ def print_time(computation):
                     f'best hash   {bcolors.OKGREEN}{largest_zero_count} zeroes: {best_hash}{bcolors.ENDC}\n'
                     f'best nonce  {bcolors.OKGREEN}{largest_zero_count}{best_nonce}{bcolors.ENDC}\n'
                     f'end:        {bcolors.OKGREEN}{end}{bcolors.ENDC}\n'
-                    f'end hash    {bcolors.OKGREEN}{"{:032x}".format(end)}{bcolors.ENDC}\n\n\n'
-                )
+                    f'end hash    {bcolors.OKGREEN}{"{:032x}".format(end)}{bcolors.ENDC}\n\n\n')
                 conn = sqlite3.connect('hash_data.db')
                 c = conn.cursor()
                 update_string = '''UPDATE hash_data SET largest_zero_count={largest_zero_count}, best_hash='{best_hash}', start='{start}', ending='{ending}', best_nonce='{best_nonce}', total_proccessing_time={total_proccessing_time} WHERE id={id};'''.format(
@@ -79,8 +82,8 @@ def print_time(computation):
                 print(update_string)
                 with conn:
                     c.execute(update_string)
-
                 break
+
             if m.end() >= largest_zero_count:
                 if int(main_hash, 16) < int(best_hash, 16):
                     if m.end() == largest_zero_count:
@@ -94,7 +97,8 @@ def print_time(computation):
                         f'\nNumber of 0s: {bcolors.FAIL}{largest_zero_count}{bcolors.ENDC}' \
                         f'\nHash:         {bcolors.OKBLUE}{best_hash}{bcolors.ENDC}' \
                         f'\nNonce:        {bcolors.OKBLUE}{best_nonce}{bcolors.ENDC}' \
-                        f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}'
+                        f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}' \
+                        f'\nHash rate     {bcolors.OKBLUE}{(i - (0 if id == 1 else ((((16 ** 32) // 8) * (id - 1)) - 1))) / int(float(computation[6]) + float(time.time() - now))}{bcolors.ENDC}'
                     print(status_text)
 
 
