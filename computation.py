@@ -15,7 +15,6 @@ now = time.time()
 previous = 'cdac1f5a6b2d5fcd32bf9287702446dc0637644860809f1fa294e00eed00a254'
 current = 'fadaa78054ac10b5967cd0dd8d7886029a2f4e98ca378a71a5621b42a6126dd3'
 nonce = ''
-prog = re.compile(r"^0+")
 largest_zero_count = 0
 cores = 8
 database = []
@@ -47,6 +46,7 @@ def print_time(computation):
 
     id = computation[0]
     largest_zero_count = int(computation[1])
+    prog = re.compile(rf"^0{{{largest_zero_count},}}")
     best_hash = computation[3]
     best_nonce = computation[2]
     start, end = int(computation[4]), int(computation[5])
