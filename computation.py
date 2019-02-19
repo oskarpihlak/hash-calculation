@@ -46,8 +46,8 @@ def print_time(computation):
 
     id = computation[0]
     largest_zero_count = int(computation[1])
-    prog = re.compile(rf"^0{{{largest_zero_count},}}")
-    best_hash = computation[3]
+    prog = re.compile(rf"^0{{{largest_zero_count if largest_zero_count != 0 else 1},}}")
+    best_hash = computation[3] if int(computation[3], 16) > 0 else hashlib.sha256(('%s%s%s' % (previous, current, "{:032x}".format(0))).encode('utf-8')).hexdigest()
     best_nonce = computation[2]
     start, end = int(computation[4]), int(computation[5])
 
@@ -56,18 +56,19 @@ def print_time(computation):
         nonce = "{:032x}".format(i)
         main_hash = hashlib.sha256(('%s%s%s' % (previous, current, nonce)).encode('utf-8')).hexdigest()
 
-        if prog.match(main_hash):
+        if bool(prog.match(main_hash)):
 
             m = prog.match(main_hash)
 
             if m.end() >= largest_zero_count:
                 if int(main_hash, 16) < int(best_hash, 16):
                     if m.end() == largest_zero_count:
-                        print('found a smaller one!')
+                        print(f'\n\n{bcolors.FAIL}found a smaller one!{bcolors.ENDC}')
                     largest_zero_count = m.end()
                     best_hash = main_hash
                     best_nonce = nonce
                     countdown = to_hms(int(float(computation[6]) + float(time.time() - now)))
+                    prog = re.compile(rf"^0{{{largest_zero_count if largest_zero_count != 0 else 1},}}")
                     hash_time = f"{bcolors.OKGREEN}{countdown.hours} hour(s) {countdown.minutes} minute(s) {countdown.seconds} second(s){bcolors.ENDC}"
                     status_text = f'\n{hash_time} - Process {bcolors.OKGREEN}{id}{bcolors.ENDC}' \
                         f'\nNumber of 0s: {bcolors.FAIL}{largest_zero_count}{bcolors.ENDC}' \
@@ -76,6 +77,7 @@ def print_time(computation):
                         f'\nProgress      {bcolors.OKBLUE}{str((((int(nonce, 16) - start) / 20000000000000000000000000000000) * 100))} % {bcolors.ENDC}' \
                         f'\nHash rate     {bcolors.OKBLUE}{(i - (0 if id == 1 else ((((16 ** 32) // 8) * (id - 1)) - 1))) / int(float(computation[6]) + float(time.time() - now))}{bcolors.ENDC}'
                     print(status_text)
+                    print(prog)
 
         if is_pressed('q'):
             print(
@@ -132,9 +134,9 @@ if __name__ == "__main__":
                 return l
 
 
-            hash_insert(1, 0, '', '', '0', str(get_computation_range(1)))
+            hash_insert(1, 0, '0', '0', '0', str(get_computation_range(1)))
             for i in range(2, 9):
-                hash_insert(i, 0, '', '', str(get_computation_range(i - 1)), str(get_computation_range(i)))
+                hash_insert(i, 0, '0', '0', str(get_computation_range(i - 1)), str(get_computation_range(i)))
 
     with conn:
         c.execute("SELECT * FROM hash_data")
