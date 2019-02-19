@@ -6,7 +6,7 @@ import re
 import time
 from collections import namedtuple
 import os
-import keyboard as keyboard
+from keyboard import is_pressed
 import csv
 import sqlite3
 
@@ -56,7 +56,7 @@ def print_time(computation):
         main_hash = hashlib.sha256(('%s%s%s' % (previous, current, nonce)).encode('utf-8')).hexdigest()
         m = prog.match(main_hash)
         if m:
-            if keyboard.is_pressed('q'):
+            if is_pressed('q'):
                 print(
                     f'Proccess {bcolors.FAIL}{id}{bcolors.ENDC}: {bcolors.OKGREEN}finished - {largest_zero_count} zeroes{bcolors.ENDC}\n'
                     f'iteration:  {bcolors.OKGREEN}{i}{bcolors.ENDC}\n'
